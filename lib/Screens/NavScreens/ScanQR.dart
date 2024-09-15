@@ -1,9 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:genscan_qr/Models/qrdata.dart';
 import 'package:genscan_qr/Screens/NavScreens/DetailQR.dart';
-import 'package:genscan_qr/Screens/NavScreens/Profile.dart';
 import 'package:genscan_qr/Widgets/qr_scanner_overlay.dart';
 import 'package:genscan_qr/constants.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -13,9 +12,26 @@ class ScanQRScreen extends StatelessWidget {
 
   final MobileScannerController scannerController = MobileScannerController();
 
+  setType(BarcodeType giventype) {
+    log(giventype.name);
+    switch (giventype) {
+      case BarcodeType.wifi:
+        return type.Wifi.name;
+      case BarcodeType.url:
+        return type.Link.name;
+      case BarcodeType.email:
+        return type.Email.name;
+      case BarcodeType.phone:
+        return type.Phoneno.name;
+      default:
+        return type.Text.name;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -38,8 +54,8 @@ class ScanQRScreen extends StatelessWidget {
                 const SizedBox(
                   height: 10,
                 ),
-                Spacer(),
-                Container(
+                const Spacer(),
+                SizedBox(
                   width: 220,
                   height: 220,
                   child: Stack(
@@ -49,29 +65,31 @@ class ScanQRScreen extends StatelessWidget {
                         onDetect: (capture) {
                           scannerController.stop();
                           final List<Barcode> barcodes = capture.barcodes;
-                          Map<String, dynamic> data = {
-                            'QRValue': barcodes[0].rawValue,
-                            'format': barcodes[0].format,
-                            'valueType': barcodes[0].type,
-                          };
+                          log(barcodes[0].rawValue.toString());
+                          QrData data = QrData(
+                              name:
+                                  "QR - ${DateTime.now().microsecondsSinceEpoch}",
+                              data: barcodes[0].rawValue.toString(),
+                              type: setType(barcodes[0].type),
+                              nature: homepagefilter.Scanned.name,
+                              timestamp: DateTime.now().toString());
                           log(data.toString());
-                          Navigator.of(context).pop();
-                          Navigator.of(context).push(MaterialPageRoute(
+                          Navigator.push(context, MaterialPageRoute(
                             builder: (context) {
                               return DetailQRScreen(
                                 data: data,
                               );
                             },
                           ));
-                          // scannerController.start();
+                          scannerController.start();
                         },
                       ),
                       const QRScannerOverlay(overlayColour: Colors.white),
                     ],
                   ),
                 ),
-                Spacer(),
-                Text('Place QR in this area'),
+                const Spacer(),
+                const Text('Place QR in this area'),
                 const SizedBox(
                   height: 10,
                 ),
